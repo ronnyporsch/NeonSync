@@ -1,0 +1,9 @@
+.gradle/
+build/
+out/
+.idea/workspace.xml
+.kotlin/
+# makepkg
+/packaging/arch/src/
+/packaging/arch/pkg/
+/packaging/arch/*.pkg.tar.*

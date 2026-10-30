@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=NeonSync
+GenericName=Bias Lighting
+Comment=Drive Home Assistant lights from your screen and music
+Exec=neonsync
+Icon=neonsync
+StartupWMClass=neonsync
+Categories=Utility;
+Keywords=hue;zigbee;home assistant;ambilight;bias lighting;
+Terminal=false

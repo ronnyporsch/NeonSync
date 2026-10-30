@@ -1,0 +1,13 @@
+[Unit]
+Description=NeonSync (bias lighting for Home Assistant lights)
+PartOf=graphical-session.target
+After=graphical-session.target plasma-plasmashell.service
+
+[Service]
+# Tray only; starting the app from the menu focuses this instance's window
+ExecStart=/usr/bin/neonsync run --tray
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

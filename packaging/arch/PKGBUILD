@@ -1,0 +1,49 @@
+# Builds NeonSync from this source tree: run `makepkg -si` in this directory (packaging/arch).
+# It must not live in the project root: makepkg uses ./src as its build directory and `makepkg -c`
+# deletes it, which there would be the project's source code.
+pkgname=neonsync
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Bias lighting for Home Assistant lights (ZHA, Hue Play), reacting to screen and audio, for KDE Plasma on Wayland"
+arch=('x86_64')
+license=('unknown')
+depends=(
+  'java-runtime>=21'
+  'gstreamer'
+  'gst-plugins-base'
+  'gst-plugin-pipewire'
+  'pipewire'
+  'xdg-desktop-portal'
+  'xdg-desktop-portal-kde'
+  'hicolor-icon-theme'
+)
+makedepends=('java-environment>=21')
+# The jars contain prebuilt native libraries (Skia, JNA, jffi); nothing to strip
+options=('!strip' '!debug')
+source=()
+
+_srcroot="$(realpath "$startdir/../..")"
+
+build() {
+  cd "$_srcroot"
+  ./gradlew --no-daemon --quiet installDist -x test
+}
+
+check() {
+  cd "$_srcroot"
+  ./gradlew --no-daemon --quiet test
+}
+
+package() {
+  cd "$_srcroot"
+  install -d "$pkgdir/usr/share/neonsync"
+  cp -r build/install/neonsync/bin build/install/neonsync/lib "$pkgdir/usr/share/neonsync/"
+  rm -f "$pkgdir/usr/share/neonsync/bin/neonsync.bat"
+  # The Gradle start script resolves this symlink to find its lib directory
+  install -d "$pkgdir/usr/bin"
+  ln -s /usr/share/neonsync/bin/neonsync "$pkgdir/usr/bin/neonsync"
+
+  install -Dm644 packaging/neonsync.desktop "$pkgdir/usr/share/applications/neonsync.desktop"
+  install -Dm644 src/main/resources/neonsync.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/neonsync.svg"
+  install -Dm644 packaging/neonsync.service "$pkgdir/usr/lib/systemd/user/neonsync.service"
+}
