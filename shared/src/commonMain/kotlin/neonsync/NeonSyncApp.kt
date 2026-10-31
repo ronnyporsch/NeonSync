@@ -54,7 +54,7 @@ data class LiveState(
 
 /**
  * Wires everything together. All state changes run sequentially in one coroutine fed by [commands],
- * so UI actions, tray clicks, screen lock, stream errors and shutdown can't race each other. After
+ * so UI actions, screen lock, stream errors and shutdown can't race each other. After
  * every change [reconcile] brings capture, audio and the light loops in line with the desired state.
  *
  * Screen and audio capture come from the [platform]; modes it can't provide don't run.
@@ -171,8 +171,6 @@ class NeonSyncApp(private var config: Config, val platform: Platform) {
     }
     fun setBrightness(value: Double) = commands.trySend(Command.Brightness(value.coerceIn(0.05, 1.0)))
 
-    /** Changes the brightness by [steps] of 5 %, e.g. from a scroll wheel. */
-    fun stepBrightness(steps: Int) = setBrightness(setupBrightness + 0.05 * steps)
     fun changeSetup(change: (Setup) -> Setup) = commands.trySend(Command.ChangeSetup(change))
     fun move(entityId: String, position: Vec3) = commands.trySend(Command.Move(entityId, position.clampToRoom()))
     fun saveHomeAssistant(config: HomeAssistantConfig) = commands.trySend(Command.SaveHomeAssistant(config))
@@ -180,9 +178,6 @@ class NeonSyncApp(private var config: Config, val platform: Platform) {
 
     /** Reported by the platform, see [Config.onScreenLock]. */
     fun setScreenLocked(locked: Boolean) = commands.trySend(Command.Lock(locked))
-
-    /** True when there is nothing to drive yet, so the window should be shown on start. */
-    val needsSetup get() = config.homeAssistant.token.isBlank() || (setup.selectedLights.isEmpty() && setup.selectedAreas.isEmpty())
 
     /** Starts the background part. Returns immediately. */
     fun start() {

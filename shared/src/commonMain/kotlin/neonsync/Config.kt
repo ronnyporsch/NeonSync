@@ -93,7 +93,7 @@ data class Config(
     val onStop: StopAction = StopAction.RESTORE,
     /** What to do with the lights while the screen is locked. */
     val onScreenLock: StopAction = StopAction.OFF,
-    /** Start capturing immediately instead of waiting for "Enable" in the tray menu. */
+    /** Start capturing immediately instead of waiting for "Enable" in the UI. */
     val autoStart: Boolean = true,
 )
 
@@ -167,7 +167,7 @@ data class Setup(
     val audioBassColor: String = "#ff0000",
     val audioMidColor: String = "#00ff00",
     val audioHighColor: String = "#0000ff",
-    /** Global brightness multiplier (0.05..1), set with the slider or the tray wheel. */
+    /** Global brightness multiplier (0.05..1), set with the slider. */
     val brightness: Double = 1.0,
 ) {
     fun bandsOf(entityId: String): Set<Band> = lightBands[entityId]?.takeIf { it.isNotEmpty() } ?: Band.ALL

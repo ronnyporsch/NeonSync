@@ -55,7 +55,7 @@ object ColorMath {
         return XY(x / sum, y / sum)
     }
 
-    /** CIE xy (at full brightness) → 8 bit sRGB, used for the tray icon. */
+    /** CIE xy (at full brightness) → 8 bit sRGB, used for light color swatches. */
     fun xyToSrgb8(c: XY): Triple<Int, Int, Int> {
         val bigY = 1.0
         val bigX = bigY / c.y * c.x

@@ -15,15 +15,14 @@ import neonsync.DesktopShell
 import neonsync.Logo
 import neonsync.NeonSyncApp
 
-/** Runs the Compose UI on the calling thread. The window hides on close; the app keeps running in the tray. */
+/** Runs the Compose UI on the calling thread. Closing the window quits the app. */
 fun runUi(app: NeonSyncApp, shell: DesktopShell) = application(exitProcessOnExit = false) {
-    val visible by shell.windowVisible.collectAsState()
     val focusRequests by shell.focusRequests.collectAsState()
     val windowState = rememberWindowState(size = DpSize(1180.dp, 760.dp))
     val icon = remember { BitmapPainter(Logo.render(256).asComposeImageBitmap()) }
-    Window(onCloseRequest = shell::hideWindow, visible = visible, title = "NeonSync", icon = icon, state = windowState) {
-        LaunchedEffect(focusRequests, visible) {
-            if (visible) bringToFront(window)
+    Window(onCloseRequest = shell::quit, title = "NeonSync", icon = icon, state = windowState) {
+        LaunchedEffect(focusRequests) {
+            if (focusRequests > 0) bringToFront(window)
         }
         App(app)
     }

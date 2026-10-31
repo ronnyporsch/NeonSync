@@ -20,8 +20,7 @@ import kotlin.system.exitProcess
 private const val USAGE = """Usage: neonsync [command]
 
 Commands:
-  run           Start NeonSync with window and tray icon (default)
-                --tray: start in the tray only (used for autostart)
+  run           Start NeonSync (default)
   list-lights   List light entities known to Home Assistant
   test-lights   Flash the selected lights red, green and blue one after another
   help          Show this help
@@ -31,7 +30,7 @@ fun main(args: Array<String>) {
     val command = args.firstOrNull() ?: "run"
     try {
         when (command) {
-            "run" -> run(showWindow = "--tray" !in args)
+            "run" -> run()
             "list-lights" -> withHomeAssistant { ha -> listLights(ha) }
             "test-lights" -> withHomeAssistant { ha -> testLights(ha) }
             "help", "-h", "--help" -> print(USAGE)
@@ -46,10 +45,10 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun run(showWindow: Boolean) {
+private fun run() {
     val bus = DBusConnectionBuilder.forSessionBus().build()
-    if (!SingleInstance.acquire(bus, focusRunning = showWindow)) {
-        println(if (showWindow) "NeonSync is already running, focusing its window." else "NeonSync is already running.")
+    if (!SingleInstance.acquire(bus)) {
+        println("NeonSync is already running, focusing its window.")
         bus.disconnect()
         return
     }
@@ -70,7 +69,7 @@ private fun run(showWindow: Boolean) {
         bus.disconnect()
     })
     app.start()
-    shell.start(showWindow = showWindow || app.needsSetup)
+    shell.start()
     // Compose needs to own this thread; returns only if the UI terminates unexpectedly
     runUi(app, shell)
     shell.quit()

@@ -61,7 +61,7 @@ class LightController(
     private val mode: Mode,
     private val config: Config,
     private val ha: HomeAssistantClient,
-    /** Global brightness multiplier (tray / UI). */
+    /** Global brightness multiplier (UI). */
     private val brightness: () -> Double,
     private val audio: () -> AudioLevels,
     /** Colours for audio-only mode, read on every tick so changes apply immediately. */

@@ -45,5 +45,4 @@ package() {
 
   install -Dm644 packaging/neonsync.desktop "$pkgdir/usr/share/applications/neonsync.desktop"
   install -Dm644 desktopApp/src/main/resources/neonsync.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/neonsync.svg"
-  install -Dm644 packaging/neonsync.service "$pkgdir/usr/lib/systemd/user/neonsync.service"
 }

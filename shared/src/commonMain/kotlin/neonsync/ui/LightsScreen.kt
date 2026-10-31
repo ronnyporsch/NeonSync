@@ -44,9 +44,11 @@ import neonsync.NeonSyncApp
 import neonsync.ColorMath
 import neonsync.HaLight
 import neonsync.LightColor
+import neonsync.LightController
 import neonsync.LightState
 import neonsync.Setup
 import neonsync.XY
+import neonsync.toFixed
 
 /** A group in the list: an HA area, or the lights without area (id = null). */
 private data class AreaGroup(val id: String?, val name: String, val lights: List<HaLight>)
@@ -92,6 +94,7 @@ fun LightsScreen(app: NeonSyncApp) {
                         setup = ui.setup,
                         active = ui.activeLights,
                         states = live.lights,
+                        stats = live.stats,
                         expanded = collapsed[group.key] != true,
                         onToggleExpanded = { collapsed[group.key] = collapsed[group.key] != true },
                         app = app,
@@ -117,6 +120,7 @@ private fun AreaCard(
     setup: Setup,
     active: Set<String>,
     states: Map<String, LightState>,
+    stats: Map<String, LightController.Stats>,
     expanded: Boolean,
     onToggleExpanded: () -> Unit,
     app: NeonSyncApp,
@@ -166,7 +170,7 @@ private fun AreaCard(
             }
             if (expanded) {
                 group.lights.forEach { light ->
-                    LightRow(light, light.entityId in active, states[light.entityId] ?: light.state) { checked ->
+                    LightRow(light, light.entityId in active, states[light.entityId] ?: light.state, stats[light.entityId]) { checked ->
                         app.changeSetup { s ->
                             if (checked) {
                                 s.copy(selectedLights = s.selectedLights + light.entityId)
@@ -189,7 +193,8 @@ private fun AreaCard(
 }
 
 @Composable
-private fun LightRow(light: HaLight, checked: Boolean, state: LightState, onChange: (Boolean) -> Unit) {
+/** [stats] is set while NeonSync drives the light. */
+private fun LightRow(light: HaLight, checked: Boolean, state: LightState, stats: LightController.Stats?, onChange: (Boolean) -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = 40.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -204,7 +209,16 @@ private fun LightRow(light: HaLight, checked: Boolean, state: LightState, onChan
             !light.supportsColor -> "no colour support"
             else -> state.state
         }
-        Text(note, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(120.dp))
+        Column(Modifier.width(120.dp)) {
+            Text(note, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (stats != null) {
+                Text(
+                    "${stats.updatesPerSecond.toFixed(1)} upd/s, ${stats.avgLatencyMs.toFixed(0)} ms",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

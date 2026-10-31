@@ -23,7 +23,7 @@ dependencyResolutionManagement {
 
 /** Shared logic and Compose UI for all platforms. */
 include(":shared")
-/** Linux desktop app (KDE Plasma / Wayland): screen and audio capture, tray icon. */
+/** Linux desktop app (KDE Plasma / Wayland): screen and audio capture. */
 include(":desktopApp")
 include(":androidApp")
 include(":webApp")
