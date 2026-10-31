@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome version of the logo: lamp head and beam -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <group
+        android:pivotX="30"
+        android:pivotY="31"
+        android:rotation="-32"
+        android:scaleX="0.86"
+        android:scaleY="0.86"
+        android:translateX="2"
+        android:translateY="1">
+        <path
+            android:fillAlpha="0.6"
+            android:fillColor="#FFFFFF"
+            android:pathData="M20,14 L40,14 L56,54 A26,7 0 0,1 4,54 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M24,-1 L36,-1 A10,10 0 0,1 36,19 L24,19 A10,10 0 0,1 24,-1 Z" />
+    </group>
+</vector>

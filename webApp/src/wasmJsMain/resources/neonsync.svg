@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>NeonSync</title>
+  <defs>
+    <linearGradient id="beam" x1="0" y1="14" x2="0" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff2fd6" stop-opacity="1"/>
+      <stop offset="0.5" stop-color="#8a5cff" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#22e5ff" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="16" y1="0" x2="44" y2="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff2fd6"/><stop offset="1" stop-color="#8a5cff"/>
+    </linearGradient>
+  </defs>
+  <!-- A tilted stage spotlight casting a neon beam -->
+  <g transform="translate(32 32) rotate(-32) scale(0.86) translate(-30 -31)">
+    <!-- Beam and the pool of light it casts -->
+    <path d="M20 14 L40 14 L56 54 A26 7 0 0 1 4 54 Z" fill="url(#beam)"/>
+    <ellipse cx="30" cy="54" rx="26" ry="7" fill="#22e5ff" opacity="0.75"/>
+    <!-- Lamp head with bright lens -->
+    <rect x="14" y="-1" width="32" height="20" rx="10" fill="url(#neon)"/>
+    <rect x="20" y="12" width="20" height="5" rx="2.5" fill="#fff" opacity="0.95"/>
+  </g>
+</svg>
