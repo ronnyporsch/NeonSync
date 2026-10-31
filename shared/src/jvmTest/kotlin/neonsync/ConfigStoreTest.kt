@@ -1,5 +1,6 @@
 package neonsync
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.jsonObject
 import java.nio.file.Files
 import kotlin.io.path.exists
@@ -14,21 +15,28 @@ import kotlin.test.assertTrue
 class ConfigStoreTest {
     private val home = Files.createTempDirectory("neonsync-test")
 
+    private class MemorySecrets(var value: String? = null) : SecretStore {
+        override val location = "memory"
+        override suspend fun read() = value
+        override suspend fun write(secret: String) { value = secret.ifBlank { null } }
+    }
+
     @Test
     fun `first start creates a private default config`() {
         val path = home.resolve("neonsync/config.json")
 
-        val config = ConfigStore(PathTextFile(path)).loadOrCreate()
+        val config = runBlocking { ConfigStore(PathTextFile(path), MemorySecrets()).loadOrCreate() }
 
         assertEquals(Config(), config)
         assertTrue(path.exists())
+        assertTrue("token" !in path.readText())
         assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(path)))
     }
 
     @Test
     fun `update keeps values edited on disk`() {
         val path = home.resolve("update-test.json")
-        val store = ConfigStore(PathTextFile(path))
+        val store = ConfigStore(PathTextFile(path), MemorySecrets())
         store.save(Config())
         // User edits a tuning value by hand while the app runs
         path.writeText(path.readText().replace("\"updatesPerSecond\": 5.0", "\"updatesPerSecond\": 8.0"))
@@ -39,6 +47,23 @@ class ConfigStoreTest {
         assertEquals(8.0, result.color.updatesPerSecond)
         assertEquals(setOf("light.x"), result.setup.selectedLights)
         assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(path)))
+    }
+
+    @Test
+    fun `the token is kept out of the file`() = runBlocking {
+        val path = home.resolve("token-test.json")
+        val secrets = MemorySecrets()
+        val store = ConfigStore(PathTextFile(path), secrets)
+        store.save(Config())
+
+        store.saveHomeAssistant(HomeAssistantConfig("http://ha:8123", "secret-token"))
+        store.update { it.copy(setup = it.setup.copy(selectedLights = setOf("light.x"))) }
+
+        assertEquals("secret-token", secrets.value)
+        assertTrue("token" !in path.readText())
+        val loaded = store.load()
+        assertEquals(HomeAssistantConfig("http://ha:8123", "secret-token"), loaded.homeAssistant)
+        assertEquals(setOf("light.x"), loaded.setup.selectedLights)
     }
 
     @Test

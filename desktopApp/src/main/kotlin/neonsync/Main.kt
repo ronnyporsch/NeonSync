@@ -53,9 +53,10 @@ private fun run() {
         return
     }
     setWindowClass("neonsync")
-    val config = AppPaths.configStore.loadOrCreate()
+    val config = runBlocking { AppPaths.configStore.loadOrCreate() }
     val platform = Platform(
         configFile = PathTextFile(AppPaths.configFile),
+        secrets = AppPaths.secrets,
         screen = PortalScreenSource(bus, config.capture),
         audio = PipeWireAudio(config.audio),
         openConfigFile = { ProcessBuilder("xdg-open", AppPaths.configFile.toString()).start() },
@@ -89,7 +90,7 @@ private fun setWindowClass(name: String) {
 }
 
 private fun withHomeAssistant(block: suspend (HomeAssistantClient) -> Unit) {
-    val config = AppPaths.configStore.load()
+    val config = runBlocking { AppPaths.configStore.load() }
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val ha = HomeAssistantClient(config.homeAssistant, scope)
     try {

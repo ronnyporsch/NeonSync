@@ -65,7 +65,7 @@ fun SettingsScreen(app: NeonSyncApp) {
             )
             OutlinedTextField(
                 value = token, onValueChange = { token = it.trim() }, label = { Text("Long-lived access token") },
-                supportingText = { Text("Home Assistant → your profile → Security → Long-lived access tokens") },
+                supportingText = { Text("Home Assistant → your profile → Security → Long-lived access tokens\nStored in ${app.platform.secrets.location}") },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {

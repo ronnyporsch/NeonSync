@@ -21,7 +21,8 @@ object AppPaths {
     val configFile: Path = configDir.resolve("config.json")
     val stateFile: Path = stateDir.resolve("state.json")
 
-    val configStore = ConfigStore(PathTextFile(configFile))
+    val secrets = SecretServiceStore()
+    val configStore = ConfigStore(PathTextFile(configFile), secrets)
 }
 
 /** Runtime state persisted between runs (not meant to be edited). */

@@ -15,6 +15,7 @@ depends=(
   'pipewire'
   'xdg-desktop-portal'
   'xdg-desktop-portal-impl'  # any backend with ScreenCast: -kde, -gnome, -wlr, -hyprland
+  'org.freedesktop.secrets'  # stores the Home Assistant token: KDE Wallet, GNOME Keyring, KeePassXC, …
   'hicolor-icon-theme'
 )
 makedepends=('java-environment>=21')

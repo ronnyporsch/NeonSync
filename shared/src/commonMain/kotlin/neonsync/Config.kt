@@ -2,6 +2,7 @@ package neonsync
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 
 /** Normalized screen rectangle (0.0 .. 1.0), origin top-left. */
@@ -17,7 +18,11 @@ data class Zone(val left: Double, val top: Double, val right: Double, val bottom
 data class HomeAssistantConfig(
     /** Base URL, e.g. `http://homeassistant.local:8123`. */
     val url: String = "http://homeassistant.local:8123",
-    /** Long-lived access token (HA profile → Security → Long-lived access tokens). */
+    /**
+     * Long-lived access token (HA profile → Security → Long-lived access tokens). Not part of
+     * config.json, it is stored in the platform's [SecretStore].
+     */
+    @Transient
     val token: String = "",
 )
 
@@ -186,27 +191,38 @@ val json = Json {
     encodeDefaults = true
 }
 
-class ConfigStore(private val file: TextFile) {
+/** config.json plus the Home Assistant token, which is kept in [secrets] instead of the file. */
+class ConfigStore(private val file: TextFile, private val secrets: SecretStore) {
+    private val log = logger("neonsync.ConfigStore")
+
     val location get() = file.location
 
-    fun load(requireHomeAssistant: Boolean = true): Config {
+    suspend fun load(requireHomeAssistant: Boolean = true): Config {
         val text = file.readText() ?: throw ConfigException("No config found at ${file.location}. Start the app once to create one.")
         val config = try {
             json.decodeFromString<Config>(text)
         } catch (e: Exception) {
             throw ConfigException("Invalid config ${file.location}: ${e.message}")
         }
-        validate(config, requireHomeAssistant)
-        return config
+        val token = try {
+            secrets.read().orEmpty()
+        } catch (e: Exception) {
+            // E.g. the wallet unlock dialog was cancelled; the token can be entered again in the settings
+            log.warn("Could not read the access token from {}: {}", secrets.location, e.message)
+            ""
+        }
+        val loaded = config.copy(homeAssistant = config.homeAssistant.copy(token = token))
+        validate(loaded, requireHomeAssistant)
+        return loaded
     }
 
     /** For the UI app: creates a default config if there is none, HA settings may still be empty. */
-    fun loadOrCreate(): Config {
+    suspend fun loadOrCreate(): Config {
         if (file.readText() == null) save(Config())
         return load(requireHomeAssistant = false)
     }
 
-    /** The file holds the HA token; [TextFile] implementations keep it private. */
+    /** Writes the file; the token isn't part of it, see [saveHomeAssistant]. */
     fun save(config: Config) = file.writeText(json.encodeToString(config) + "\n")
 
     /**
@@ -222,9 +238,15 @@ class ConfigStore(private val file: TextFile) {
         save(change(onDisk))
     }
 
+    /** Stores the token in [secrets] and the URL in the file. Throws if the token can't be stored. */
+    suspend fun saveHomeAssistant(config: HomeAssistantConfig) {
+        secrets.write(config.token)
+        update { it.copy(homeAssistant = config) }
+    }
+
     private fun validate(c: Config, requireHomeAssistant: Boolean) {
         fun check(ok: Boolean, msg: String) { if (!ok) throw ConfigException(msg) }
-        if (requireHomeAssistant) check(c.homeAssistant.token.isNotBlank(), "homeAssistant.token is empty")
+        if (requireHomeAssistant) check(c.homeAssistant.token.isNotBlank(), "No Home Assistant access token stored (${secrets.location}). Enter it in the app's settings.")
         check(c.homeAssistant.url.startsWith("http://") || c.homeAssistant.url.startsWith("https://"), "homeAssistant.url must start with http:// or https://")
         check(c.color.updatesPerSecond in 0.5..30.0, "color.updatesPerSecond must be within 0.5..30")
         check(c.color.minBrightness in 1..255 && c.color.maxBrightness in 1..255 && c.color.minBrightness <= c.color.maxBrightness, "invalid brightness range")

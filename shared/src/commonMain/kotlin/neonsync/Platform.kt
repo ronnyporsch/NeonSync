@@ -12,6 +12,8 @@ import kotlin.time.TimeSource
 class Platform(
     /** Where config.json lives. */
     val configFile: TextFile,
+    /** Where the Home Assistant token lives, outside config.json. */
+    val secrets: SecretStore,
     val screen: ScreenSource? = null,
     val audio: AudioSource? = null,
     /** Opens the config file in an editor, if the platform can. */
@@ -66,6 +68,18 @@ interface TextFile {
     /** Null if the file doesn't exist. */
     fun readText(): String?
     fun writeText(text: String)
+}
+
+/** Keeps one secret (the Home Assistant token) in the platform's credential store. */
+interface SecretStore {
+    /** For display, e.g. "KDE Wallet". */
+    val location: String
+
+    /** Null if nothing is stored. */
+    suspend fun read(): String?
+
+    /** A blank [secret] removes the stored one. */
+    suspend fun write(secret: String)
 }
 
 /** Logging facade with SLF4J style `{}` placeholders; a Throwable as last argument is logged with its stack trace. */

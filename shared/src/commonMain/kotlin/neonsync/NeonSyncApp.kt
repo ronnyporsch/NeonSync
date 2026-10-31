@@ -62,7 +62,7 @@ data class LiveState(
 class NeonSyncApp(private var config: Config, val platform: Platform) {
     private val log = logger("NeonSyncApp")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val store = ConfigStore(platform.configFile)
+    private val store = ConfigStore(platform.configFile, platform.secrets)
     private val ha = HomeAssistantClient(config.homeAssistant, scope)
     private val analyzer = ZoneAnalyzer(config.color.saturatedPixelWeight)
     private val screen = platform.screen
@@ -262,7 +262,13 @@ class NeonSyncApp(private var config: Config, val platform: Platform) {
             Command.Persist -> persist()
             is Command.SaveHomeAssistant -> {
                 config = config.copy(homeAssistant = cmd.config)
-                store.update { it.copy(homeAssistant = cmd.config) }
+                try {
+                    store.saveHomeAssistant(cmd.config)
+                } catch (e: Exception) {
+                    // Still used until the app is closed
+                    log.warn("Could not save the Home Assistant settings: {}", e.message)
+                    error = "Could not store the access token in ${platform.secrets.location}: ${e.message}"
+                }
                 directory = LightDirectory.EMPTY
                 lightStates.clear()
                 ha.reconfigure(cmd.config)
